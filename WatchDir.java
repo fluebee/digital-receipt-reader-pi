@@ -38,7 +38,7 @@ import java.util.*;
 /**
  * Example to watch a directory (or tree) for changes to files.
  */
-// Make sure file name starts with 'd' to ensure the most recent data file is found
+// Example code modified to only act on creation of files starting with the letter 'd'
 //
 public class WatchDir {
 
@@ -140,8 +140,26 @@ public class WatchDir {
                 Path name = ev.context();
                 Path child = dir.resolve(name);
 
+                // Skip files that do not start with the letter 'd' and are not of kind ENTRY_CREATE
+                //String fileName = child.getFileName().toString();
+                if((Character.toLowerCase(child.getFileName().toString().charAt(0)) != 'd') || (kind != ENTRY_CREATE))
+                    continue;
+
                 // print out event
                 System.out.format("%s: %s\n", event.kind().name(), child);
+                
+                // On creation of a file, store a byte array of that file to the DB
+                if (kind == ENTRY_CREATE)
+                {
+                    try {
+                        byte[] byteArray = getByteArrayFromFile(child.toString());
+                        System.out.println("Byte Array Created");
+                    } catch (IOException x) {
+                        System.out.println("File not found");
+                        continue;
+                    }
+                }
+                
 
                 // if directory is created, and watching recursively, then
                 // register it and its sub-directories
@@ -172,6 +190,20 @@ public class WatchDir {
     static void usage() {
         System.err.println("usage: java WatchDir [-r] dir");
         System.exit(-1);
+    }
+
+    private byte[] getByteArrayFromFile(final String handledDocument) throws IOException {
+        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        final InputStream in = new FileInputStream(handledDocument);
+        final byte[] buffer = new byte[500];
+    
+        int read = -1;
+        while ((read = in.read(buffer)) > 0) {
+            baos.write(buffer, 0, read);
+        }
+        in.close();
+    
+        return baos.toByteArray();
     }
 
     public static void main(String[] args) throws IOException {

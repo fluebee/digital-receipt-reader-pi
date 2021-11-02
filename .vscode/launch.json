@@ -9,7 +9,8 @@
             "name": "Launch Current File",
             "request": "launch",
             "args": [""],
-            "mainClass": "${file}"
+            "mainClass": "${file}",
+            "vmArgs": "--enable-preview"
         },
         {
             "type": "java",
