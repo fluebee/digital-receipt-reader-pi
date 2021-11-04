@@ -1,4 +1,4 @@
-package model;
+package main.domain.model;
 
 /**
  * Web Role enum to map user and admin roles.
