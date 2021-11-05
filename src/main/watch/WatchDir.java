@@ -172,10 +172,17 @@ public class WatchDir {
 
             String pId = String.format("receipt_%d_%d", apiclient.getAutoIncrement(), generateKey());
             uploadFile(child.toString(), pId);
-            insertReceiptToDatabase(pId);
+            Receipt receipt = insertReceiptToDatabase(pId);
+            
+            int receiptID = receipt.getId();
+            int byte1 = (receiptID & 0xFF000000) >> 24;
+            int byte2 = (receiptID & 0x00FF0000) >> 16;
+            int byte3 = (receiptID & 0x0000FF00) >>  8;
+            int byte4 = (receiptID & 0x000000FF);
 
-            // TODO: Clean up code
-            // TODO: Format receipt.getId() and call python script to transmit ID
+            printConsole("Calling Python code...");
+            runPython(byte1, byte2, byte3, byte4);
+            printConsole("Python code complete.");
         }
     }
 
@@ -286,5 +293,37 @@ public class WatchDir {
      */
     static <T> WatchEvent<T> cast(WatchEvent<?> event) {
         return (WatchEvent<T>) event;
+    }
+
+    /**
+     * Call python code with arguments.
+     * 
+     * @param arg1
+     * @param arg2
+     * @param arg3
+     * @param arg4
+     */
+    private void runPython(int arg1, int arg2, int arg3, int arg4) {
+        String s = "";
+        String[] cmd = {
+            "python",
+            "D:\\Documents\\GitHub\\digital-receipt-reader-pi\\src\\main\\pythonScript.py",
+            String.valueOf(arg1),
+            String.valueOf(arg2),
+            String.valueOf(arg3),
+            String.valueOf(arg4),
+        };
+        try {
+            enableLogging();
+            Runtime r = Runtime.getRuntime();
+            Process p = r.exec(cmd);
+            BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            while((s = in.readLine()) != null){ // read in the output from the python script
+                System.out.println(s);
+            }
+            disableLogging();
+        } catch (IOException e) {
+            System.out.println("Python script failed");
+        }
     }
 }
