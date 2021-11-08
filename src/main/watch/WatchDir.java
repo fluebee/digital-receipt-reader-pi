@@ -176,7 +176,7 @@ public class WatchDir {
             uploadFile(child.toString(), pId);
             Receipt receipt = insertReceiptToDatabase(pId);
 
-            int receiptID = receipt.getId();
+            int receiptID = 100;
             int byte1 = (receiptID & 0xFF000000) >> 24;
             int byte2 = (receiptID & 0x00FF0000) >> 16;
             int byte3 = (receiptID & 0x0000FF00) >> 8;
