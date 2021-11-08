@@ -305,8 +305,13 @@ public class WatchDir {
      */
     private void runPython(int arg1, int arg2, int arg3, int arg4) {
         String s = "";
-        String[] cmd = { "python", "/home/pi/Desktop/Digital Receipt/raspberrypi/python/example_rw_ntag2.py",
-                String.valueOf(arg1), String.valueOf(arg2), String.valueOf(arg3), String.valueOf(arg4), };
+        // String[] cmd = { "python", "/home/pi/Desktop/Digital
+        // Receipt/raspberrypi/python/example_rw_ntag2.py",
+        // String.valueOf(arg1), String.valueOf(arg2), String.valueOf(arg3),
+        // String.valueOf(arg4) };
+
+        String[] cmd = { "python", "pythonScript.py", String.valueOf(arg1), String.valueOf(arg2), String.valueOf(arg3),
+                String.valueOf(arg4) };
         try {
             enableLogging();
             Runtime r = Runtime.getRuntime();
