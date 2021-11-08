@@ -315,7 +315,7 @@ public class WatchDir {
         }
 
         String s = "";
-        String[] cmd = { "python", pScript, String.valueOf(arg1), String.valueOf(arg2), String.valueOf(arg3),
+        String[] cmd = { "python3", pScript, String.valueOf(arg1), String.valueOf(arg2), String.valueOf(arg3),
                 String.valueOf(arg4) };
 
         try {
