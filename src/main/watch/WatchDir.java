@@ -183,7 +183,8 @@ public class WatchDir {
             int byte4 = (receiptID & 0x000000FF);
 
             printConsole("Calling Python code...");
-            runPython(byte1, byte2, byte3, byte4);
+            runPython(Integer.toHexString(byte1), Integer.toHexString(byte2), Integer.toHexString(byte3),
+                    Integer.toHexString(byte4));
             printConsole("Python code complete.");
         }
     }
@@ -306,7 +307,7 @@ public class WatchDir {
      * @param arg4
      * @throws IOException
      */
-    private void runPython(int arg1, int arg2, int arg3, int arg4) {
+    private void runPython(String arg1, String arg2, String arg3, String arg4) {
         String pScript = "/home/pi/Desktop/Digital Receipt/raspberrypi/python/example_rw_ntag2.py";
         try {
             BufferedReader reader = new BufferedReader(new FileReader(pScript));
@@ -315,8 +316,7 @@ public class WatchDir {
         }
 
         String s = "";
-        String[] cmd = { "python3", pScript, String.valueOf(arg1), String.valueOf(arg2), String.valueOf(arg3),
-                String.valueOf(arg4) };
+        String[] cmd = { "python3", pScript, arg1, arg2, arg3, arg4 };
 
         try {
             Runtime r = Runtime.getRuntime();
