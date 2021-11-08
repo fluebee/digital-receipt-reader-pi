@@ -23,6 +23,6 @@ public class FileListener {
      */
     public static void main(String[] args) throws Exception {
         // register directory and process its events
-        new WatchDir(Paths.get(args[1])).processEvents();
+        new WatchDir(Paths.get(args[0])).processEvents();
     }
 }
