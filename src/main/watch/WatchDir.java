@@ -36,6 +36,7 @@ import static java.nio.file.LinkOption.*;
 import java.nio.file.attribute.*;
 import java.io.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
@@ -151,6 +152,7 @@ public class WatchDir {
      * will only process receipts that have a {@link Kind} type of ENTRY_CREATE
      * 
      * @param k The key that was generated for the watch.
+     * @throws IOException
      */
     private void processReceipt(WatchKey k) {
         Path dir = keys.get(k);
@@ -302,27 +304,30 @@ public class WatchDir {
      * @param arg2
      * @param arg3
      * @param arg4
+     * @throws IOException
      */
     private void runPython(int arg1, int arg2, int arg3, int arg4) {
-        String s = "";
-        // String[] cmd = { "python", "/home/pi/Desktop/Digital
-        // Receipt/raspberrypi/python/example_rw_ntag2.py",
-        // String.valueOf(arg1), String.valueOf(arg2), String.valueOf(arg3),
-        // String.valueOf(arg4) };
-
-        String[] cmd = { "python", "pythonScript.py", String.valueOf(arg1), String.valueOf(arg2), String.valueOf(arg3),
-                String.valueOf(arg4) };
+        String pScript = "/home/pi/Desktop/Digital\\ Receipt/raspberrypi/python/example_rw_ntag2.py";
         try {
-            enableLogging();
+            BufferedReader reader = new BufferedReader(new FileReader(pScript));
+        } catch (Exception e) {
+            printConsole("File does not exist");
+        }
+
+        String s = "";
+        String[] cmd = { "python", pScript, String.valueOf(arg1), String.valueOf(arg2), String.valueOf(arg3),
+                String.valueOf(arg4) };
+
+        try {
             Runtime r = Runtime.getRuntime();
             Process p = r.exec(cmd);
             BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
             while ((s = in.readLine()) != null) { // read in the output from the python script
-                System.out.println(s);
+                printConsole(s);
             }
-            disableLogging();
+
         } catch (IOException e) {
-            printConsole("Python script failed");
+            printConsole("Error Running Pythong Script!");
         }
     }
 }

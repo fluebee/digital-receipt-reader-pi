@@ -21,8 +21,8 @@ public class FileListener {
      * @param args The arguements to run with the watch.
      * @throws IOException If the file can not be found.
      */
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws Exception {
         // register directory and process its events
-        new WatchDir(Paths.get(args[0])).processEvents();
+        new WatchDir(Paths.get("C:\\Users\\sambu\\Desktop\\WatchDirectoryTest")).processEvents();
     }
 }
