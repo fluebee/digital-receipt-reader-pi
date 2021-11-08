@@ -307,7 +307,7 @@ public class WatchDir {
      * @throws IOException
      */
     private void runPython(int arg1, int arg2, int arg3, int arg4) {
-        String pScript = "/home/pi/Desktop/Digital\\ Receipt/raspberrypi/python/example_rw_ntag2.py";
+        String pScript = "/home/pi/Desktop/Digital Receipt/raspberrypi/python/example_rw_ntag2.py";
         try {
             BufferedReader reader = new BufferedReader(new FileReader(pScript));
         } catch (Exception e) {
