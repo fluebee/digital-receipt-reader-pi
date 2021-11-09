@@ -12,7 +12,9 @@ import java.io.InputStreamReader;
  * @since November 9, 2021
  */
 public class NfcTagWriter {
-    private String scriptPath = "/home/pi/Desktop/Digital Receipt/raspberrypi/python/example_rw_ntag2.py";
+    private String BASE_PATH = "/home/pi/Desktop/Digital Receipt/raspberrypi/python/";
+    private String scriptTagWrite = BASE_PATH + "receipt__write_tag.py";
+    private String scriptTagClear = BASE_PATH + "receipt__clear_tag.py";
 
     /**
      * Method to write the given id to the tag. If the id can not be formated to a
@@ -23,8 +25,20 @@ public class NfcTagWriter {
      */
     public void write(int receiptId) {
         printConsole(String.format("Executing Python script with Receipt ID '%d'...", receiptId));
-        executeScript(formatIntToHex(receiptId));
+        writeTagData(formatIntToHex(receiptId));
         printConsole("Python Write to Tag Complete!");
+
+        printConsole("Waiting 30 seconds for Tag read.");
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            printConsole("ERROR: Could not sleep");
+        }
+
+        printConsole("Clearing Tag data...");
+        clearTag();
+        printConsole("Tag Clear Complete!");
+
     }
 
     /**
@@ -51,9 +65,25 @@ public class NfcTagWriter {
      * 
      * @param args The hex values to write to the tag.
      */
-    private void executeScript(String[] args) {
-        doesFileExist();
-        String[] cmd = { "python3", scriptPath, args[0], args[1], args[2], args[3] };
+    private void writeTagData(String[] args) {
+        doesFileExist(scriptTagWrite);
+        String[] cmd = { "python3", scriptTagWrite, args[0], args[1], args[2], args[3] };
+
+        try {
+            Process p = Runtime.getRuntime().exec(cmd);
+            outputScriptConsole(new BufferedReader(new InputStreamReader(p.getInputStream())));
+        } catch (IOException e) {
+            printConsole("Error Running Pythong Script!");
+        }
+    }
+
+    /**
+     * This will clear the receipt id off of the tag. This will get called once 30
+     * seconds have passed.
+     */
+    private void clearTag() {
+        doesFileExist(scriptTagClear);
+        String[] cmd = { "python3", scriptTagClear };
 
         try {
             Process p = Runtime.getRuntime().exec(cmd);
@@ -81,9 +111,9 @@ public class NfcTagWriter {
      * Confirm the python path to the script exists. If it does not then it will
      * print to the console that file does not exist and exit the program.
      */
-    private void doesFileExist() {
+    private void doesFileExist(String path) {
         try {
-            BufferedReader reader = new BufferedReader(new FileReader(scriptPath));
+            BufferedReader reader = new BufferedReader(new FileReader(path));
         } catch (Exception e) {
             printConsole("File does not exist");
             System.exit(1);
