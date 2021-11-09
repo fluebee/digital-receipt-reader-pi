@@ -115,7 +115,7 @@ public class NfcTagWriter {
         try {
             BufferedReader reader = new BufferedReader(new FileReader(path));
         } catch (Exception e) {
-            printConsole("File does not exist");
+            printConsole(String.format("File does not exist: %s", path));
             System.exit(1);
         }
     }
