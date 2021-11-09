@@ -24,9 +24,9 @@ public class NfcTagWriter {
      * @param receiptId The id to write the nfc tag.
      */
     public void write(int receiptId) {
-        printConsole(String.format("Executing Python script with Receipt ID '%d'...", receiptId));
+        printConsole(String.format("Writing Receipt ID '%d' to Tag...", receiptId));
         writeTagData(formatIntToHex(receiptId));
-        printConsole("Python Write to Tag Complete!");
+        printConsole("Write to Tag Complete!");
 
         printConsole("Waiting 30 seconds for Tag read.");
         try {
