@@ -1,5 +1,13 @@
 package main.watch;
 
+import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
+import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
+import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
+import static java.nio.file.StandardWatchEventKinds.OVERFLOW;
+
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintStream;
 /*
  * Copyright (c) 2008, 2010, Oracle and/or its affiliates. All rights reserved.
  *
@@ -30,21 +38,19 @@ package main.watch;
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-import java.nio.file.*;
-import static java.nio.file.StandardWatchEventKinds.*;
-import static java.nio.file.LinkOption.*;
-import java.nio.file.attribute.*;
-import java.io.*;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import com.cloudinary.Cloudinary;
-import com.cloudinary.utils.ObjectUtils;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
+import java.nio.file.WatchEvent;
+import java.nio.file.WatchEvent.Kind;
+import java.nio.file.WatchKey;
+import java.nio.file.WatchService;
+import java.util.HashMap;
+import java.util.Map;
 
 import main.cloudinary.ReceiptCloud;
 import main.domain.APIClient;
-import main.domain.model.DigitalReceiptToken;
 import main.domain.model.Receipt;
+import main.python.NfcTagWriter;
 
 /**
  * Example to watch a directory (or tree) for changes to files. This code has
@@ -60,6 +66,7 @@ public class WatchDir {
     private PrintStream disabledStream;
     private ReceiptCloud receiptCloud;
     private APIClient apiclient;
+    private NfcTagWriter nfcTagWriter;
 
     private final WatchService watcher;
     private final Map<WatchKey, Path> keys;
@@ -92,6 +99,7 @@ public class WatchDir {
 
         disableLogging();
         this.receiptCloud = new ReceiptCloud();
+        this.nfcTagWriter = new NfcTagWriter();
 
         printConsole("INFO: Authenticating User Client...");
         this.apiclient = new APIClient("pi@admin.com", "piadmin");
@@ -169,24 +177,32 @@ public class WatchDir {
             if ((fileName.charAt(0) != 'd') || (kind != ENTRY_CREATE) || kind == OVERFLOW)
                 continue;
 
-            // print out event
+            // Print out event
             printConsole(String.format("%s for %s\n", event.kind().name(), child));
 
-            String pId = String.format("receipt_%d_%d", apiclient.getAutoIncrement(), generateKey());
-            uploadFile(child.toString(), pId);
-            Receipt receipt = insertReceiptToDatabase(pId);
-
-            int receiptID = receipt.getId();
-            int byte1 = (receiptID & 0xFF000000) >> 24;
-            int byte2 = (receiptID & 0x00FF0000) >> 16;
-            int byte3 = (receiptID & 0x0000FF00) >> 8;
-            int byte4 = (receiptID & 0x000000FF);
-
-            printConsole("Calling Python code...");
-            runPython(Integer.toHexString(byte1), Integer.toHexString(byte2), Integer.toHexString(byte3),
-                    Integer.toHexString(byte4));
-            printConsole("Python code complete.");
+            // Store Receipt Data
+            storeReceipt(String.format("receipt_%d_%d", apiclient.getAutoIncrement(), generateKey()), child.toString());
         }
+    }
+
+    /**
+     * Run the commands to store the receipt into the Cloudinary S3 bucket, insert
+     * it into the database, and then write the receipt id to the tag.
+     * 
+     * @param pid      The unique public id of the receipt.
+     * @param filePath The path to receipt.
+     */
+    private void storeReceipt(String pId, String filePath) {
+        // 1. Store receipt in S3 bucket
+        uploadFile(filePath, pId);
+
+        // 2. Store receipt into database
+        Receipt receipt = insertReceiptToDatabase(pId);
+
+        // 3. Write id to NFC tag
+        enableLogging();
+        nfcTagWriter.write(receipt.getId());
+        disableLogging();
     }
 
     /**
@@ -296,38 +312,5 @@ public class WatchDir {
      */
     static <T> WatchEvent<T> cast(WatchEvent<?> event) {
         return (WatchEvent<T>) event;
-    }
-
-    /**
-     * Call python code with arguments.
-     * 
-     * @param arg1
-     * @param arg2
-     * @param arg3
-     * @param arg4
-     * @throws IOException
-     */
-    private void runPython(String arg1, String arg2, String arg3, String arg4) {
-        String pScript = "/home/pi/Desktop/Digital Receipt/raspberrypi/python/example_rw_ntag2.py";
-        try {
-            BufferedReader reader = new BufferedReader(new FileReader(pScript));
-        } catch (Exception e) {
-            printConsole("File does not exist");
-        }
-
-        String s = "";
-        String[] cmd = { "python3", pScript, arg1, arg2, arg3, arg4 };
-
-        try {
-            Runtime r = Runtime.getRuntime();
-            Process p = r.exec(cmd);
-            BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
-            while ((s = in.readLine()) != null) { // read in the output from the python script
-                printConsole(s);
-            }
-
-        } catch (IOException e) {
-            printConsole("Error Running Pythong Script!");
-        }
     }
 }
