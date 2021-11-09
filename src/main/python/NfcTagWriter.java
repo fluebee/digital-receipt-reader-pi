@@ -30,7 +30,7 @@ public class NfcTagWriter {
 
         printConsole("Waiting 30 seconds for Tag read.");
         try {
-            Thread.sleep(5000);
+            Thread.sleep(30000);
         } catch (InterruptedException e) {
             printConsole("ERROR: Could not sleep");
         }
