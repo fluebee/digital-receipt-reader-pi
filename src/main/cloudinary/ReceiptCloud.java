@@ -37,7 +37,7 @@ public class ReceiptCloud {
      */
     public void upload(String file, String publicId) {
         try {
-            cloud.uploader().upload(file, ObjectUtils.asMap("public_id", publicId));
+            cloud.uploader().upload(file, ObjectUtils.asMap("public_id", publicId, "format", "png"));
         } catch (IOException e) {
             System.out.println("WARN: Cloudinary Upload Failed!");
         }
